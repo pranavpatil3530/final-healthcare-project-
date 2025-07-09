@@ -9,11 +9,11 @@ import adminRoutes from './routes/admin.js';
 import { generalLimiter, authLimiter } from './middleware/rateLimiting.js';
 import { performanceMiddleware } from './utils/monitoring.js';
 
-// Load environment variables
+// Load env
 dotenv.config();
 
+// Init express
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Connect DB
 connectDB();
@@ -23,16 +23,19 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// ✅ Fix: Handle preflight early
-app.options('*', cors());
+// ✅ 1. Handle OPTIONS preflight manually
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-// Performance
-app.use(performanceMiddleware);
-
-// General rate limiting (apply after OPTIONS fix)
-app.use(generalLimiter);
-
-// CORS setup
+// ✅ 2. Normal CORS config
 const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
 
 app.use(cors({
@@ -47,6 +50,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Performance + other middleware AFTER above
+app.use(performanceMiddleware);
+app.use(generalLimiter);
 
 
 // Body parsing middleware
