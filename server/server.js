@@ -15,29 +15,28 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to database
+// Connect DB
 connectDB();
 
-// Performance monitoring
-app.use(performanceMiddleware);
-
-// Security middlewareh
+// Helmet security
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// Apply general rate limiting
+// ✅ Fix: Handle preflight early
+app.options('*', cors());
+
+// Performance
+app.use(performanceMiddleware);
+
+// General rate limiting (apply after OPTIONS fix)
 app.use(generalLimiter);
 
-// CORS configuration
-
-const allowedOrigins = [
-  'https://final-healthcare-project-s5kz.vercel.app'
-];
+// CORS setup
+const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
 
 app.use(cors({
   origin: function (origin, callback) {
-    console.log("💡 Request from origin:", origin);
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -48,11 +47,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// 🛠️ FIX: Handle preflight requests properly
-app.options('*', cors());
-
-
 
 
 // Body parsing middleware
@@ -72,7 +66,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 
