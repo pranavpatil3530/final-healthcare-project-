@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js';
@@ -11,88 +12,90 @@ import { performanceMiddleware } from './utils/monitoring.js';
 // Load environment variables
 dotenv.config();
 
-// Init express app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to DB
+// Connect to database
 connectDB();
 
-// ✅✅ FINAL FIX: Global CORS + OPTIONS handler
-const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
+// Performance monitoring
+app.use(performanceMiddleware);
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204); // Preflight OK
-  }
-
-  next();
-});
-
-// ✅ Security
+// Security middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// ✅ Performance + rate limiting
-app.use(performanceMiddleware);
+// Apply general rate limiting
 app.use(generalLimiter);
 
-// ✅ Body parsing
+// CORS configuration
+const allowedOrigins = [
+  'https://final-healthcare-project-s5kz.vercel.app', // Production
+  'https://final-healthcare-project-s5kz-sw39l43m3-pranav-e4ab0c12.vercel.app', // Preview
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS: ' + origin));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Mental Health API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    version: '2.0.0',
-    features: ['mongodb', 'caching', 'rate-limiting', 'monitoring', 'analytics'],
-  });
+ res.json({
+  success: true,
+  message: 'Mental Health API is running',
+  timestamp: new Date().toISOString(),
+  environment: process.env.NODE_ENV || 'development',
+  version: '2.0.0',
+  features: ['mongodb', 'caching', 'rate-limiting', 'monitoring', 'analytics']
+});
 });
 
-// ✅ API Routes
+// API routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ✅ 404 Fallback
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found',
+    message: 'API endpoint not found'
   });
 });
 
-// ✅ Global Error Handler
+// Global error handler
 app.use((error, req, res, next) => {
   console.error('Global error handler:', error);
+  
   res.status(error.status || 500).json({
     success: false,
     message: error.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    error: process.env.NODE_ENV === 'development' ? error.stack : undefined
   });
 });
 
-// ✅ Start server
+// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Mental Health API server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`📈 Admin panel: http://localhost:${PORT}/api/admin/health`);
+  console.log(`🎯 Features: MongoDB, Caching, Rate Limiting, Monitoring, Analytics`);
 });
 
 export default app;
