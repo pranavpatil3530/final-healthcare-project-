@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js';
@@ -9,90 +8,87 @@ import adminRoutes from './routes/admin.js';
 import { generalLimiter, authLimiter } from './middleware/rateLimiting.js';
 import { performanceMiddleware } from './utils/monitoring.js';
 
-// Load env
+// Load environment variables
 dotenv.config();
 
-// Init express
+// Init app
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Connect DB
+// Connect to DB
 connectDB();
 
-// Helmet security
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
+// Apply helmet security
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
-// ✅ 1. Handle OPTIONS preflight manually
+// ✅✅ FINAL FIX: Handle CORS and preflight (OPTIONS) requests
+const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
+
 app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
     return res.sendStatus(200);
   }
+
   next();
 });
 
-// ✅ 2. Normal CORS config
-const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('❌ CORS blocked for origin: ' + origin));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Performance + other middleware AFTER above
+// Performance monitoring
 app.use(performanceMiddleware);
+
+// General rate limiting
 app.use(generalLimiter);
 
-
-// Body parsing middleware
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
+// Health check
 app.get('/health', (req, res) => {
- res.json({
-  success: true,
-  message: 'Mental Health API is running',
-  timestamp: new Date().toISOString(),
-  environment: process.env.NODE_ENV || 'development',
-  version: '2.0.0',
-  features: ['mongodb', 'caching', 'rate-limiting', 'monitoring', 'analytics']
-});
+  res.json({
+    success: true,
+    message: 'Mental Health API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '2.0.0',
+    features: ['mongodb', 'caching', 'rate-limiting', 'monitoring', 'analytics'],
+  });
 });
 
-// API routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 404 handler
+// 404 Handler
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found'
+    message: 'API endpoint not found',
   });
 });
 
 // Global error handler
 app.use((error, req, res, next) => {
   console.error('Global error handler:', error);
-  
+
   res.status(error.status || 500).json({
     success: false,
     message: error.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
   });
 });
 
@@ -102,7 +98,6 @@ app.listen(PORT, () => {
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`📈 Admin panel: http://localhost:${PORT}/api/admin/health`);
-  console.log(`🎯 Features: MongoDB, Caching, Rate Limiting, Monitoring, Analytics`);
 });
 
 export default app;
