@@ -30,21 +30,24 @@ app.use(helmet({
 app.use(generalLimiter);
 
 // CORS configuration
-const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [];
+const allowedOrigins = [
+  'https://final-healthcare-project-s5kz.vercel.app', // Production
+  'https://final-healthcare-project-s5kz-sw39l43m3-pranav-e4ab0c12.vercel.app', // Preview
+];
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`❌ CORS blocked for origin: ${origin}`);
-      callback(new Error('CORS not allowed from this origin'));
+      callback(new Error('Not allowed by CORS: ' + origin));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
