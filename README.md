@@ -270,16 +270,26 @@ Get user statistics and analytics.
 
 ## 🚀 Deployment
 
-### Frontend Deployment (Netlify/Vercel)
+### Frontend Deployment (Vercel)
 
-1. **Build and deploy:**
+1. **Environment Variables in Vercel Dashboard:**
    ```bash
-   npm run build
-   # Deploy dist/ folder to your hosting provider
+   # Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   # Add the following:
+   VITE_API_URL=https://your-backend-api-url.com/api
    ```
 
-2. **Environment Variables:**
-   - `VITE_API_URL`: Your backend API URL
+2. **Deploy Commands:**
+   ```bash
+   # Build Command: npm run build
+   # Output Directory: dist
+   # Install Command: npm install
+   ```
+
+3. **After Backend Deployment:**
+   - Update `VITE_API_URL` in Vercel environment variables
+   - Point it to your deployed backend API URL
+   - Redeploy frontend to apply changes
 
 ### Backend Deployment (Railway/Render/Heroku)
 
