@@ -49,6 +49,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// 🛠️ FIX: Handle preflight requests properly
+app.options('*', cors());
+
+
 
 
 // Body parsing middleware
