@@ -32,7 +32,6 @@ app.use(generalLimiter);
 // CORS configuration
 const allowedOrigins = [
   'https://final-healthcare-project-s5kz.vercel.app', // Production
-  'https://final-healthcare-project-s5kz-sw39l43m3-pranav-e4ab0c12.vercel.app', // Preview
 ];
 
 app.use(cors({
