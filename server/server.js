@@ -67,7 +67,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/auth', authLimiter, authRoutes);
+app.use('/auth', authLimiter, authRoutes); // ✅ Matches frontend URL
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 
