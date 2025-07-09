@@ -11,21 +11,14 @@ import { performanceMiddleware } from './utils/monitoring.js';
 // Load environment variables
 dotenv.config();
 
-// Init app
+// Initialize express app
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to DB
+// Connect to MongoDB
 connectDB();
 
-// Apply helmet security
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-);
-
-// ✅✅ FINAL FIX: Handle CORS and preflight (OPTIONS) requests
+// ✅ CORS + Preflight Handling (Place this before everything else)
 const allowedOrigins = ['https://final-healthcare-project-s5kz.vercel.app'];
 
 app.use((req, res, next) => {
@@ -46,10 +39,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Performance monitoring
-app.use(performanceMiddleware);
+// Security middleware
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
-// General rate limiting
+// Monitoring and rate limiting
+app.use(performanceMiddleware);
 app.use(generalLimiter);
 
 // Body parsing
@@ -68,12 +66,12 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
+// Routes
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 404 Handler
+// 404 fallback
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
@@ -82,22 +80,21 @@ app.use('*', (req, res) => {
 });
 
 // Global error handler
-app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
 
-  res.status(error.status || 500).json({
+  res.status(err.status || 500).json({
     success: false,
-    message: error.message || 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    message: err.message || 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   });
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log(`🚀 Mental Health API server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`📈 Admin panel: http://localhost:${PORT}/api/admin/health`);
+  console.log(`🚀 Mental Health API running on port ${PORT}`);
+  console.log(`🌐 Health: http://localhost:${PORT}/health`);
+  console.log(`📊 Mode: ${process.env.NODE_ENV}`);
 });
 
 export default app;
