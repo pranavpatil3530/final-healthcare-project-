@@ -100,6 +100,7 @@ A beautiful, responsive web application for daily mental health check-ins with s
    ENCRYPTION_KEY=your-32-character-encryption-key-here
    NODE_ENV=development
    CORS_ORIGIN=http://localhost:5173
+   CORS_ORIGIN=http://localhost:5173
    ```
 
 3. **Start the application:**
