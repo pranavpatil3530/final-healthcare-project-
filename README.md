@@ -95,11 +95,10 @@ A beautiful, responsive web application for daily mental health check-ins with s
    **Backend (server/.env):**
    ```env
    PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/mental-health-app
-   JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
-   ENCRYPTION_KEY=your-32-character-encryption-key-here
    NODE_ENV=development
-   CORS_ORIGIN=http://localhost:5173
+   MONGODB_URI=mongodb+srv://admin:Password123@cluster0.wylg8ks.mongodb.net/mental-health-app?retryWrites=true&w=majority&appName=Cluster0
+   JWT_SECRET=your-super-secure-jwt-secret-key-here-make-it-long-and-random
+   ENCRYPTION_KEY=your-32-character-encryption-key-here
    CORS_ORIGIN=http://localhost:5173
    ```
 
@@ -287,16 +286,17 @@ Get user statistics and analytics.
 1. **Environment Variables:**
    ```env
    NODE_ENV=production
-   MONGODB_URI=your_mongodb_atlas_connection_string
-   JWT_SECRET=your_production_jwt_secret
+   MONGODB_URI=mongodb+srv://admin:Password123@cluster0.wylg8ks.mongodb.net/mental-health-app?retryWrites=true&w=majority&appName=Cluster0
+   JWT_SECRET=your-super-secure-jwt-secret-key-here-make-it-long-and-random
    ENCRYPTION_KEY=your_production_encryption_key
    CORS_ORIGIN=your_frontend_domain
    ```
 
 2. **MongoDB Atlas Setup:**
-   - Create cluster at https://cloud.mongodb.com
-   - Create database user and whitelist IP addresses
-   - Get connection string and update MONGODB_URI
+   - Already configured with MongoDB Atlas cluster
+   - Database: `mental-health-app` 
+   - Connection string includes authentication and cluster details
+   - Ensure your IP address is whitelisted in MongoDB Atlas Network Access
 
 ## 🧪 Testing
 
