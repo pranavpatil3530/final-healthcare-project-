@@ -21,7 +21,7 @@ connectDB();
 // Performance monitoring
 app.use(performanceMiddleware);
 
-// Security middleware
+// Security middlewareh
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
