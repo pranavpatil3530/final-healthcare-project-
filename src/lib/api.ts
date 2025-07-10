@@ -8,7 +8,8 @@ class API {
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}${endpoint}`;
     
-    console.log('Making request to:', url); // Debug log
+    console.log('Making request to:', url);
+    console.log('Current environment API URL:', import.meta.env.VITE_API_URL);
     
     const config: RequestInit = {
       mode: 'cors',
@@ -39,6 +40,8 @@ class API {
       return data.data || data;
     } catch (error) {
       console.error('API request failed:', error);
+      console.error('Request URL was:', url);
+      console.error('Base URL:', this.baseURL);
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('Unable to connect to server. Please make sure the backend is running.');
       }
