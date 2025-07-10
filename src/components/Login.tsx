@@ -16,18 +16,22 @@ const Login: React.FC = () => {
     setError('');
 
     try {
+      console.log('Attempting to', isLogin ? 'login' : 'register', 'with email:', email);
       if (isLogin) {
         const response = await authAPI.login(email, password);
+        console.log('Login successful:', response);
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         window.location.reload(); // Trigger auth state change
       } else {
         const response = await authAPI.register(email, password);
+        console.log('Registration successful:', response);
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         window.location.reload(); // Trigger auth state change
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       setError(error.message || 'An error occurred');
     } finally {
       setLoading(false);

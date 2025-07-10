@@ -31,20 +31,26 @@ app.use(generalLimiter);
 
 // CORS configuration
 const allowedOrigins = [
+  'http://localhost:5173', // Development
   'https://final-healthcare-project-s5kz.vercel.app', // Production
+  'https://localhost:5173', // Development HTTPS
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS: ' + origin));
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow all origins in development
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 

@@ -8,7 +8,10 @@ class API {
     const token = localStorage.getItem('token');
     const url = `${this.baseURL}${endpoint}`;
     
+    console.log('Making request to:', url); // Debug log
+    
     const config: RequestInit = {
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
@@ -17,14 +20,30 @@ class API {
       ...options,
     };
 
-    const response = await fetch(url, config);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || 'Request failed';
+        } catch {
+          errorMessage = errorText || `HTTP ${response.status}`;
+        }
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      return data.data || data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to server. Please make sure the backend is running.');
+      }
+      throw error;
     }
-
-    return data.data || data;
   }
 
   auth = {
